@@ -10,10 +10,10 @@ struct line {
 	int x1, y1;
 	int x2, y2;
 };
-std::vector<std::pair<int,int>> points;
 std::pair<int, int> basePoint;
 std::vector<line>lines;
 int vector_index =0;
+int chooseAlgo = -1;
 bool done_drawing = false;
 void bresenham(int x1, int y1 , int x2, int y2);
 void setPixels(int x, int y);
@@ -23,13 +23,6 @@ void setPixels(int x, int y);
 void bresenham(int x1, int y1, int x2, int y2) {
 	int dx = std::abs(x2 - x1);
 	int dy = std::abs(y2 - y1);
-	//if (x2 < x1) {
-	//	std::swap(x1, x2);
-	//}
-	//if (y2 < y1) {
-	//	std::swap(x2, y2);
-	//}
-
 
 	/*int dx = x2 - x1;
 	int dy = y2 - y1;*/ //need to use absolute to prevent negative points
@@ -132,7 +125,7 @@ void midpoint(int x1, int y1, int x2, int y2) {
 	// if dx>dy then slope is 0<m<1, can use regular algo
 	if (dx > dy) {
 		//std::cout <<  "DX>DY" << std::endl;
-		int d = 2 * dy - dx; //decision variable
+		int d = dy - dx/2; //decision variable
 		int deltaD1 = 2 * dy;
 		int deltaD2 = 2 * (dy - dx);
 		int y = y1;
@@ -175,7 +168,7 @@ void midpoint(int x1, int y1, int x2, int y2) {
 	}
 	else {
 		//std::cout << "IN the else " << std::endl;
-		int d = 2*dx - dy; //decision variable
+		int d = dx - dy/2; //decision variable
 		int deltaD1 = 2 * dx;
 		int deltaD2 = 2 * (dx - dy);
 		int y;
@@ -300,6 +293,14 @@ void mouse(int button, int state, int x, int y) {
 		if (done_drawing && !lines.empty()) {
 			std::cout << "DONE DRAWING BOSSS " << lines.size() << std::endl;
 			lines.pop_back();
+			std::cout << " Size after " << lines.size() << std::endl;
+			glClear(GL_COLOR_BUFFER_BIT);
+			for (auto it = std::begin(lines); it != std::end(lines); ++it) {
+
+				line current = *it;
+				draw_line(current.x1, current.y1, current.x2, current.y2);
+
+			}
 			done_drawing = false;
 		}
 	
@@ -343,6 +344,7 @@ void mouseMove(int x, int y) {
 	
 	
 	glClear(GL_COLOR_BUFFER_BIT);
+	//draw all the lines
 
 	for (auto it = std::begin(lines); it != std::end(lines); ++it) {
 
@@ -350,7 +352,7 @@ void mouseMove(int x, int y) {
 		draw_line(current.x1, current.y1, current.x2,current.y2);
 					
 	}
-	
+
 	draw_line(basePoint.first, basePoint.second, x, y);
 	
 	glutPostRedisplay();
@@ -443,7 +445,16 @@ int main(int argc, char** argv) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0.0, 1000.0, 500.0, 0.0);
-	glutDisplayFunc(display_bresenham);
+	//allow user to choose an algorithm
+	std::cout << "Enter 1 for Bresenham or 2 for midpoint" << std::endl;
+	std::cin >> chooseAlgo;
+	if (chooseAlgo == 1) {
+		glutDisplayFunc(display_bresenham);
+	}
+	else if (chooseAlgo == 2) {
+		std::cout << " midpoint" << std::endl;
+		glutDisplayFunc(display_midpoint);
+	}
 	glutMouseFunc(mouse);
 	glutMotionFunc(mouseMove);
 	glutMainLoop();
